@@ -14,7 +14,8 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-      <form onSubmit={handleSubmit} className="p-6 max-w-md mx-auto">
+      <div className="w-full max-w-md bg-white rounded-xl shadow-md py-8">
+        <form onSubmit={handleSubmit} className="p-6 max-w-md mx-auto">
         <h1 className="text-xl font-bold mb-4 text-center">Admin Login</h1>
         <input
           type="email"
@@ -39,6 +40,8 @@ export default function LoginPage() {
           Login
         </button>
       </form>
+      </div>
+      
     </div>
   );
 }

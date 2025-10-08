@@ -18,6 +18,7 @@ export default function CreateJob() {
   const [hasMore, setHasMore] = useState(true)
   const [isLoading, setIsLoading] = useState(false)
   const observerRef = useRef<HTMLDivElement | null>(null)
+  const [editingJob, setEditingJob] = useState<Job | null>(null)
   const [form, setForm] = useState({
     title: "",
     company: "",
@@ -68,6 +69,54 @@ export default function CreateJob() {
     setPage(1)
     setHasMore(true)
     fetchJobs()
+  }
+
+  const updateJob = async () => {
+    if (!editingJob) return
+
+    const res = await fetch("/api/jobs", {
+      method: "PUT",
+      body: JSON.stringify({ id: editingJob.id, ...form}),
+      headers: { "Content-Type": "application/json" },
+    })
+
+    if (res.ok) {
+      setJobs(prev => prev.map(job =>
+        job.id === editingJob.id ? { ...job, ...form } : job
+      ))
+      setEditingJob(null)
+      setForm({
+        title: "",
+        company: "",
+        location: "",
+        type: "",
+        description: "",
+      })
+    } else {
+      alert("Failed to update job")
+    }
+  }
+
+  const startEdit = (job: Job) => {
+    setEditingJob(job)
+    setForm({
+      title: job.title,
+      company: job.company,
+      location: job.location,
+      type: job.type,
+      description: job.description,
+    })
+  }
+
+  const cancelEdit = () => {
+    setEditingJob(null)
+    setForm({
+      title: "",
+      company: "",
+      location: "",
+      type: "",
+      description: "",
+    })
   }
 
   const deleteJob = async (id: number) => {
@@ -124,6 +173,9 @@ export default function CreateJob() {
         </div>
 
         <div className="space-y-4">
+        <h3 className="text-lg font-semibold text-gray-800">
+            {editingJob ? `Editing: ${editingJob.title}` : "Create New Job"}
+          </h3>
           {Object.keys(form).map((key) => (
             <input
               key={key}
@@ -131,16 +183,35 @@ export default function CreateJob() {
               value={form[key as keyof typeof form]}
               onChange={(e) => setForm({ ...form, [key]: e.target.value })}
               className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black"
+              required
             />
           ))}
         </div>
 
-        <button
-          onClick={addJob}
-          className="w-full bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors shadow-lg font-medium"
-        >
-          Add Job
-        </button>
+        <div className="flex gap-2">
+          {editingJob ? (
+            <>
+              <button
+              onClick={updateJob}
+              className="flex-1 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors shadow-lg font-medium">
+                Update Job
+              </button>
+              <button
+              onClick={cancelEdit}
+              className="flex-1 bg-gray-600 text-white px-6 py-3 rounded-lg hover:bg-gray-700 transition-colors shadow-lg font-medium"
+              >
+                Cancel
+              </button>
+            </>
+          ) : (
+            <button
+              onClick={addJob}
+              className="w-full bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors shadow-lg font-medium"
+            >
+              Add Job
+            </button>
+          )}
+        </div>
 
         <div className="pt-6">
           <h2 className="text-2xl font-bold text-gray-800 mb-4">Jobs</h2>
@@ -150,13 +221,24 @@ export default function CreateJob() {
                 key={job.id}
                 className="flex justify-between items-center bg-white p-4 rounded-lg shadow hover:shadow-md transition-shadow"
               >
-                <span className="text-gray-700 font-medium">{job.title}</span>
-                <button
-                  onClick={() => deleteJob(job.id)}
-                  className="text-sm px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600"
-                >
-                  Delete
-                </button>
+                <div className="flex-1">
+                  <span className="text-gray-700 font-medium">{job.title}</span>
+                  <p className="text-sm text-gray-500">{job.company} - {job.location}</p>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => startEdit(job)}
+                    className="text-sm px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => deleteJob(job.id)}
+                    className="text-sm px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600"
+                  >
+                    Delete
+                  </button>
+                </div>
               </div>
             ))}
 

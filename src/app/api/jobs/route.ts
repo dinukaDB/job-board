@@ -19,6 +19,24 @@ export async function GET(req: Request) {
   return NextResponse.json(jobs)
 }
 
+export async function PUT(req: Request) {
+  const session = await verifySession()
+  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+
+  const { id, ...updateData } = await req.json()
+
+  try {
+    const updatedJob = await prisma.job.update({
+      where: { id },
+      data: updateData,
+    })
+    return NextResponse.json(updatedJob)
+
+  } catch (error) {
+    return NextResponse.json({ error: "Failed to update job" }, { status: 500 })
+  }
+}
+
 
 export async function POST(req: Request) {
   const session = await verifySession()
